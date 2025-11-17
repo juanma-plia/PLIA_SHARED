@@ -3,6 +3,10 @@ Servicio para gestión de ACLs (Access Control Lists)
 Lógica compartida entre microservicios para validar permisos
 """
 from typing import List, Dict, Any, Tuple
+
+from fastapi import Depends
+from plia_shared import get_firestore_service
+
 from plia_shared.database.firestore import FirestoreService
 from plia_shared.core.errors import ProfileNotFoundException
 import logging
@@ -102,11 +106,7 @@ class ACLService:
         return series
 
 
-def get_acl_service(
-        firestore: FirestoreService
-) -> ACLService:
-    """
-    Factory function para obtener instancia del servicio ACL
-    Usada como dependency en FastAPI
-    """
+def get_acl_service_dep(
+    firestore: FirestoreService = Depends(get_firestore_service)
+):
     return ACLService(firestore)

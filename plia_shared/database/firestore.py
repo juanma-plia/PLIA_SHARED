@@ -1,58 +1,53 @@
-"""
-Cliente Firestore con soporte async y retry logic básico
-"""
+import app
 from google.cloud import firestore
 from google.cloud.firestore import AsyncClient
 from typing import Any, Optional, List, Dict, Tuple
 import logging
+import asyncio
 
 logger = logging.getLogger(__name__)
 
 
 class FirestoreService:
-    """Cliente Firestore con retry logic y error handling"""
+    """Cliente Firestore async seguro y correctamente inicializado."""
 
     def __init__(self, project_id: str):
         self.project_id = project_id
         self._client: Optional[AsyncClient] = None
 
-    @property
-    def client(self) -> AsyncClient:
-        """Lazy initialization del cliente"""
+    async def init(self):
+        """Inicializa el cliente async correctamente."""
         if self._client is None:
             self._client = firestore.AsyncClient(project=self.project_id)
-            logger.info(f"Firestore client initialized for project: {self.project_id}")
+            logger.info(f"[Firestore] Client initialized for project: {self.project_id}")
+
+    @property
+    def client(self) -> AsyncClient:
+        """
+        Devuelve el cliente Firestore ya inicializado.
+        Si no está inicializado → ERROR explícito y claro.
+        """
+        if self._client is None:
+            raise RuntimeError(
+                "Firestore client not initialized. Call await firestore.init() on startup."
+            )
         return self._client
 
-
-    async def get_document(
-            self,
-            collection: str,
-            doc_id: str
-    ) -> Optional[Dict[str, Any]]:
-        """
-        Args:
-            collection: Nombre de la colección
-            doc_id: ID del documento (UUID)
-
-        Returns:
-            Dict con los datos del documento o None si no existe
-        """
+    async def get_document(self, collection: str, doc_id: str) -> Optional[Dict[str, Any]]:
         try:
             doc_ref = self.client.collection(collection).document(doc_id)
             doc = await doc_ref.get()
 
             if doc.exists:
-                logger.debug(f"Document retrieved: {collection}/{doc_id}")
+                logger.debug(f"[Firestore] Document retrieved: {collection}/{doc_id}")
                 return doc.to_dict()
 
-            logger.warning(f"Document not found: {collection}/{doc_id}")
+            logger.warning(f"[Firestore] Document not found: {collection}/{doc_id}")
             return None
 
         except Exception as e:
-            logger.error(f"Firestore get error [{collection}/{doc_id}]: {str(e)}")
+            logger.error(f"[Firestore] get_document error: {e}")
             raise
-
 
     async def query_documents(
             self,
@@ -61,19 +56,6 @@ class FirestoreService:
             order_by: Optional[str] = None,
             limit: Optional[int] = None
     ) -> List[Dict[str, Any]]:
-        """
-        Query documentos con filtros
-
-        Args:
-            collection: Nombre de la colección
-            filters: Lista de tuplas (field, operator, value)
-                    Ejemplo: [("serie_uuid", "==", "abc123")]
-            order_by: Campo para ordenar
-            limit: Límite de resultados
-
-        Returns:
-            Lista de documentos
-        """
         try:
             query = self.client.collection(collection)
 
@@ -88,14 +70,10 @@ class FirestoreService:
                 query = query.limit(limit)
 
             docs = query.stream()
-            results = [doc.to_dict() async for doc in docs]
-
-            logger.debug(f"Documents queried: {collection} ({len(results)} results)")
-
-            return results
+            return [doc.to_dict() async for doc in docs]
 
         except Exception as e:
-            logger.error(f"Firestore query error [{collection}]: {str(e)}")
+            logger.error(f"[Firestore] query_documents error: {e}")
             raise
 
 
@@ -106,65 +84,44 @@ class FirestoreService:
             values: List[str],
             order_by: Optional[str] = None
     ) -> List[Dict[str, Any]]:
-        """
-        Query documentos donde field está en una lista de valores
-
-        Args:
-            collection: Nombre de la colección
-            field: Campo a filtrar
-            values: Lista de valores
-            order_by: Campo para ordenar
-
-        Returns:
-            Lista de documentos
-
-        Note:
-            Firestore limita "in" queries a 10 valores.
-            Si hay más, se hacen múltiples queries.
-        """
         try:
             all_results = []
 
             for i in range(0, len(values), 10):
                 chunk = values[i:i + 10]
-                query = self.client.collection(collection).where(
-                    field, "in", chunk
-                )
+                query = self.client.collection(collection).where(field, "in", chunk)
 
                 if order_by:
                     query = query.order_by(order_by)
 
                 docs = query.stream()
-                results = [doc.to_dict() async for doc in docs]
-                all_results.extend(results)
-
-            logger.debug(
-                f"Documents queried IN: {collection} "
-                f"(field={field}, values={len(values)}, results={len(all_results)})"
-            )
+                all_results.extend([doc.to_dict() async for doc in docs])
 
             return all_results
 
         except Exception as e:
-            logger.error(f"Firestore query IN error [{collection}]: {str(e)}")
+            logger.error(f"[Firestore] query_documents_in error: {e}")
             raise
 
     async def close(self):
-        """Cierra la conexión (cleanup)"""
-        if self._client:
-            self._client = None
-            logger.info("Firestore client closed")
+        """El cliente async no necesita un close real, pero dejamos hook."""
+        logger.info("[Firestore] Client released")
+        self._client = None
 
 
 _firestore_service: Optional[FirestoreService] = None
+_lock = asyncio.Lock()
 
-
-def get_firestore_service(project_id: str = "plia-ai") -> FirestoreService:
-    """
-    Factory function para obtener instancia del servicio Firestore
-    Usada como dependency en FastAPI
-    """
-    global _firestore_service
-    if _firestore_service is None:
-        _firestore_service = FirestoreService(project_id)
+async def get_firestore_service(project_id="plia-ai"):
+    async with _lock:
+        global _firestore_service
+        if _firestore_service is None:
+            _firestore_service = FirestoreService(project_id)
+            await _firestore_service.init()
     return _firestore_service
+
+
+@app.on_event("startup")
+async def startup():
+    await get_firestore_service()
+    logger.info("Firestore initialized on startup")
