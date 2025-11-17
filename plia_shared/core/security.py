@@ -2,6 +2,7 @@
 Servicio para gestión de ACLs (Access Control Lists)
 Lógica compartida entre microservicios para validar permisos
 """
+
 from typing import List, Dict, Any, Tuple
 
 from fastapi import Depends
@@ -21,8 +22,7 @@ class ACLService:
         self.firestore = firestore
 
     async def get_profile_with_acl(
-            self,
-            profile_uuid: str
+        self, profile_uuid: str
     ) -> Tuple[Dict[str, Any], List[str]]:
         """
         Obtiene el perfil y calcula sus ACLs
@@ -57,11 +57,7 @@ class ACLService:
 
         return profile, series_acl
 
-    async def validate_serie_access(
-            self,
-            profile_uuid: str,
-            serie_uuid: str
-    ) -> bool:
+    async def validate_serie_access(self, profile_uuid: str, serie_uuid: str) -> bool:
         """
         Valida si un perfil tiene acceso a una serie
 
@@ -78,10 +74,7 @@ class ACLService:
 
         return has_access
 
-    async def get_series_for_profile(
-            self,
-            profile_uuid: str
-    ) -> List[Dict[str, Any]]:
+    async def get_series_for_profile(self, profile_uuid: str) -> List[Dict[str, Any]]:
         """
         Obtiene todas las series accesibles para un perfil
 
@@ -97,16 +90,11 @@ class ACLService:
             return []
 
         series = await self.firestore.query_documents_in(
-            collection="series",
-            field="serie_uuid",
-            values=series_acl,
-            order_by="order"
+            collection="series", field="serie_uuid", values=series_acl, order_by="order"
         )
 
         return series
 
 
-def get_acl_service_dep(
-    firestore: FirestoreService = Depends(get_firestore_service)
-):
+def get_acl_service_dep(firestore: FirestoreService = Depends(get_firestore_service)):
     return ACLService(firestore)

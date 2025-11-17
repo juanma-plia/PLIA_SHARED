@@ -8,6 +8,6 @@ class BaseAPISettings(BaseSettings):
     PROJECT_ID: str = "plia-ai"
     LOCATION: str = "us-central1"
 
-    API_KEY: str = 'AIzaSyCCa2dQ0aN4NIkyUBbXmFDc5UzvRStj9wU'
+    API_KEY: str = "AIzaSyCCa2dQ0aN4NIkyUBbXmFDc5UzvRStj9wU"
 
     CORS_ORIGINS: List[str] = ["*"]

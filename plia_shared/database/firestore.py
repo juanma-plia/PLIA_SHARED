@@ -1,4 +1,3 @@
-import app
 from google.cloud import firestore
 from google.cloud.firestore import AsyncClient
 from typing import Any, Optional, List, Dict, Tuple
@@ -19,7 +18,9 @@ class FirestoreService:
         """Inicializa el cliente async correctamente."""
         if self._client is None:
             self._client = firestore.AsyncClient(project=self.project_id)
-            logger.info(f"[Firestore] Client initialized for project: {self.project_id}")
+            logger.info(
+                f"[Firestore] Client initialized for project: {self.project_id}"
+            )
 
     @property
     def client(self) -> AsyncClient:
@@ -33,7 +34,9 @@ class FirestoreService:
             )
         return self._client
 
-    async def get_document(self, collection: str, doc_id: str) -> Optional[Dict[str, Any]]:
+    async def get_document(
+        self, collection: str, doc_id: str
+    ) -> Optional[Dict[str, Any]]:
         try:
             doc_ref = self.client.collection(collection).document(doc_id)
             doc = await doc_ref.get()
@@ -50,11 +53,11 @@ class FirestoreService:
             raise
 
     async def query_documents(
-            self,
-            collection: str,
-            filters: Optional[List[Tuple[str, str, Any]]] = None,
-            order_by: Optional[str] = None,
-            limit: Optional[int] = None
+        self,
+        collection: str,
+        filters: Optional[List[Tuple[str, str, Any]]] = None,
+        order_by: Optional[str] = None,
+        limit: Optional[int] = None,
     ) -> List[Dict[str, Any]]:
         try:
             query = self.client.collection(collection)
@@ -76,19 +79,18 @@ class FirestoreService:
             logger.error(f"[Firestore] query_documents error: {e}")
             raise
 
-
     async def query_documents_in(
-            self,
-            collection: str,
-            field: str,
-            values: List[str],
-            order_by: Optional[str] = None
+        self,
+        collection: str,
+        field: str,
+        values: List[str],
+        order_by: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         try:
             all_results = []
 
             for i in range(0, len(values), 10):
-                chunk = values[i:i + 10]
+                chunk = values[i : i + 10]
                 query = self.client.collection(collection).where(field, "in", chunk)
 
                 if order_by:
@@ -112,6 +114,7 @@ class FirestoreService:
 _firestore_service: Optional[FirestoreService] = None
 _lock = asyncio.Lock()
 
+
 async def get_firestore_service(project_id="plia-ai"):
     async with _lock:
         global _firestore_service
@@ -119,9 +122,3 @@ async def get_firestore_service(project_id="plia-ai"):
             _firestore_service = FirestoreService(project_id)
             await _firestore_service.init()
     return _firestore_service
-
-
-@app.on_event("startup")
-async def startup():
-    await get_firestore_service()
-    logger.info("Firestore initialized on startup")

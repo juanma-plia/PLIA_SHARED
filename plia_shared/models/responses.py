@@ -10,7 +10,7 @@ class ErrorResponse(BaseModel):
 
 class Serie(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    
+
     serie_uuid: str
     serie_title: str
     serie_initials: str = ""
@@ -22,8 +22,8 @@ class Serie(BaseModel):
 
 
 class Character(BaseModel):
-    model_config = ConfigDict(from_attributes=True, extra='allow')
-    
+    model_config = ConfigDict(from_attributes=True, extra="allow")
+
     uuid: str = Field(alias="uuid")
     serie_uuid: str
     name: str
@@ -32,8 +32,8 @@ class Character(BaseModel):
 
 
 class Scene(BaseModel):
-    model_config = ConfigDict(from_attributes=True, extra='allow')
-    
+    model_config = ConfigDict(from_attributes=True, extra="allow")
+
     uuid: str
     episode_uuid: str
     serie_uuid: Optional[str] = None
@@ -44,8 +44,8 @@ class Scene(BaseModel):
 
 
 class Location(BaseModel):
-    model_config = ConfigDict(from_attributes=True, extra='allow')
-    
+    model_config = ConfigDict(from_attributes=True, extra="allow")
+
     uuid: str
     serie_uuid: str
     name: str
@@ -54,8 +54,8 @@ class Location(BaseModel):
 
 
 class Document(BaseModel):
-    model_config = ConfigDict(from_attributes=True, extra='allow')
-    
+    model_config = ConfigDict(from_attributes=True, extra="allow")
+
     uuid: str
     serie_uuid: str
     title: str
@@ -64,13 +64,12 @@ class Document(BaseModel):
 
 
 class Shootplan(BaseModel):
-    model_config = ConfigDict(from_attributes=True, extra='allow')
-    
+    model_config = ConfigDict(from_attributes=True, extra="allow")
+
     uuid: str
     serie_uuid: str
     title: str
     order: int = 0
-
 
 
 class SeriesListResponse(BaseModel):

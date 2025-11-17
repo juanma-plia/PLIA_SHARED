@@ -1,6 +1,7 @@
 """
 Excepciones personalizadas para toda la API
 """
+
 from fastapi import HTTPException, status
 from typing import Optional
 
@@ -9,10 +10,7 @@ class PliaAPIException(HTTPException):
     """Base exception para toda la API"""
 
     def __init__(
-            self,
-            detail: str,
-            status_code: int = 500,
-            headers: Optional[dict] = None
+        self, detail: str, status_code: int = 500, headers: Optional[dict] = None
     ):
         super().__init__(status_code=status_code, detail=detail, headers=headers)
 
@@ -21,10 +19,7 @@ class BadRequestException(PliaAPIException):
     """Error 400 - Request inválido"""
 
     def __init__(self, detail: str):
-        super().__init__(
-            detail=detail,
-            status_code=status.HTTP_400_BAD_REQUEST
-        )
+        super().__init__(detail=detail, status_code=status.HTTP_400_BAD_REQUEST)
 
 
 class UnauthorizedException(PliaAPIException):
@@ -34,7 +29,7 @@ class UnauthorizedException(PliaAPIException):
         super().__init__(
             detail=detail,
             status_code=status.HTTP_401_UNAUTHORIZED,
-            headers={"WWW-Authenticate": "Bearer"}
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
 
@@ -42,10 +37,7 @@ class ForbiddenException(PliaAPIException):
     """Error 403 - Sin permisos"""
 
     def __init__(self, detail: str = "Acceso denegado"):
-        super().__init__(
-            detail=detail,
-            status_code=status.HTTP_403_FORBIDDEN
-        )
+        super().__init__(detail=detail, status_code=status.HTTP_403_FORBIDDEN)
 
 
 class NotFoundException(PliaAPIException):
@@ -54,7 +46,7 @@ class NotFoundException(PliaAPIException):
     def __init__(self, resource: str, identifier: str):
         super().__init__(
             detail=f"{resource} '{identifier}' no encontrado",
-            status_code=status.HTTP_404_NOT_FOUND
+            status_code=status.HTTP_404_NOT_FOUND,
         )
 
 
