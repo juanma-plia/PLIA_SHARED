@@ -1,5 +1,6 @@
 from google.cloud import firestore
 from google.cloud.firestore import AsyncClient
+from google.api_core.exceptions import GoogleAPIError, NotFound
 from typing import Any, Optional, List, Dict, Tuple
 import logging
 import asyncio
@@ -13,11 +14,13 @@ class FirestoreService:
     def __init__(self, project_id: str):
         self.project_id = project_id
         self._client: Optional[AsyncClient] = None
+        self._is_initialized = False
 
     async def init(self):
         """Inicializa el cliente async correctamente."""
-        if self._client is None:
+        if not self._is_initialized:
             self._client = firestore.AsyncClient(project=self.project_id)
+            self._is_initialized = True
             logger.info(
                 f"[Firestore] Client initialized for project: {self.project_id}"
             )
@@ -48,6 +51,12 @@ class FirestoreService:
             logger.warning(f"[Firestore] Document not found: {collection}/{doc_id}")
             return None
 
+        except NotFound:
+            logger.warning(f"[Firestore] Document not found: {collection}/{doc_id}")
+            return None
+        except GoogleAPIError as e:
+            logger.error(f"[Firestore] API error in get_document: {e}")
+            raise
         except Exception as e:
             logger.error(f"[Firestore] get_document error: {e}")
             raise
@@ -75,6 +84,9 @@ class FirestoreService:
             docs = query.stream()
             return [doc.to_dict() async for doc in docs]
 
+        except GoogleAPIError as e:
+            logger.error(f"[Firestore] API error in query_documents: {e}")
+            raise
         except Exception as e:
             logger.error(f"[Firestore] query_documents error: {e}")
             raise
@@ -87,6 +99,9 @@ class FirestoreService:
         order_by: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         try:
+            if not values:
+                return []
+
             all_results = []
 
             for i in range(0, len(values), 10):
@@ -101,14 +116,19 @@ class FirestoreService:
 
             return all_results
 
+        except GoogleAPIError as e:
+            logger.error(f"[Firestore] API error in query_documents_in: {e}")
+            raise
         except Exception as e:
             logger.error(f"[Firestore] query_documents_in error: {e}")
             raise
 
     async def close(self):
-        """El cliente async no necesita un close real, pero dejamos hook."""
-        logger.info("[Firestore] Client released")
-        self._client = None
+        """Limpia referencias del cliente."""
+        if self._is_initialized:
+            logger.info("[Firestore] Client released")
+            self._client = None
+            self._is_initialized = False
 
 
 _firestore_service: Optional[FirestoreService] = None
