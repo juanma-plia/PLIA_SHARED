@@ -21,21 +21,6 @@ class Serie(BaseModel):
     shootplan_uuid: Optional[str] = None
 
 
-class Character(BaseModel):
-    model_config = ConfigDict(
-        from_attributes=True, extra="allow", populate_by_name=True
-    )
-
-    uuid: str = Field(alias="char_uuid")
-    serie_uuid: str
-    name: Optional[str] = Field(None, alias="script_name")
-    description: Optional[str] = None
-    relevance: Optional[str] = None
-    char_slug: Optional[str] = None
-    ai: Optional[Any] = None
-    order: int = 0
-
-
 class Scene(BaseModel):
     model_config = ConfigDict(from_attributes=True, extra="allow")
 
@@ -80,12 +65,6 @@ class Shootplan(BaseModel):
 class SeriesListResponse(BaseModel):
     series: List[Serie]
     total: int
-
-
-class CharactersListResponse(BaseModel):
-    characters: List[Character]
-    total: int
-    serie_uuid: str
 
 
 class ScenesListResponse(BaseModel):
