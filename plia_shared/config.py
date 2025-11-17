@@ -9,7 +9,7 @@ class BaseAPISettings(BaseSettings):
     LOCATION: str = "us-central1"
     GOOGLE_APPLICATION_CREDENTIALS: Optional[str] = None
 
-    API_KEY: str = "AIzaSyCCa2dQ0aN4NIkyUBbXmFDc5UzvRStj9wU"
+    API_KEY: Optional[str] = None
 
     CORS_ORIGINS: List[str] = ["*"]
 
