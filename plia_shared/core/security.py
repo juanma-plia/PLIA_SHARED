@@ -6,13 +6,19 @@ Lógica compartida entre microservicios para validar permisos
 from typing import List, Dict, Any, Tuple
 
 from fastapi import Depends
-from plia_shared import get_firestore_service
 
 from plia_shared.database.firestore import FirestoreService
 from plia_shared.core.errors import ProfileNotFoundException
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+async def _get_firestore_service_lazy():
+    """Importación lazy para evitar circular imports"""
+    from plia_shared.database.firestore import get_firestore_service
+
+    return await get_firestore_service()
 
 
 class ACLService:
@@ -96,5 +102,7 @@ class ACLService:
         return series
 
 
-def get_acl_service_dep(firestore: FirestoreService = Depends(get_firestore_service)):
+def get_acl_service_dep(
+    firestore: FirestoreService = Depends(_get_firestore_service_lazy),
+):
     return ACLService(firestore)

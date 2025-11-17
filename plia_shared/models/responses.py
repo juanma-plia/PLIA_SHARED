@@ -22,12 +22,17 @@ class Serie(BaseModel):
 
 
 class Character(BaseModel):
-    model_config = ConfigDict(from_attributes=True, extra="allow")
+    model_config = ConfigDict(
+        from_attributes=True, extra="allow", populate_by_name=True
+    )
 
-    uuid: str = Field(alias="uuid")
+    uuid: str = Field(alias="char_uuid")
     serie_uuid: str
-    name: str
+    name: Optional[str] = Field(None, alias="script_name")
     description: Optional[str] = None
+    relevance: Optional[str] = None
+    char_slug: Optional[str] = None
+    ai: Optional[Any] = None
     order: int = 0
 
 
