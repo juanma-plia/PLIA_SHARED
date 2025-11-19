@@ -3,3 +3,4 @@ pydantic-settings
 google-cloud-firestore
 fastapi
 pre-commit
+tenacity

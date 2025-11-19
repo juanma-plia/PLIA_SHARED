@@ -30,12 +30,10 @@ from .models.requests import (
 )
 from .models.responses import (
     ErrorResponse,
-    Serie,
     Scene,
     Location,
     Document,
     Shootplan,
-    SeriesListResponse,
     ScenesListResponse,
     LocationsListResponse,
     DocsListResponse,
@@ -75,12 +73,10 @@ __all__ = [
     "ShootplansRequest",
     # Response / domain models
     "ErrorResponse",
-    "Serie",
     "Scene",
     "Location",
     "Document",
     "Shootplan",
-    "SeriesListResponse",
     "ScenesListResponse",
     "LocationsListResponse",
     "DocsListResponse",

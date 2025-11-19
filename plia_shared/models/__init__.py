@@ -9,12 +9,10 @@ from .requests import (
 )
 from .responses import (
     ErrorResponse,
-    Serie,
     Scene,
     Location,
     Document,
     Shootplan,
-    SeriesListResponse,
     ScenesListResponse,
     LocationsListResponse,
     DocsListResponse,

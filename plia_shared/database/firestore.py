@@ -1,9 +1,22 @@
 from google.cloud import firestore
 from google.cloud.firestore import AsyncClient
-from google.api_core.exceptions import GoogleAPIError, NotFound
+from google.api_core.exceptions import (
+    GoogleAPIError,
+    NotFound,
+    ResourceExhausted,
+    DeadlineExceeded,
+)
 from typing import Any, Optional, List, Dict, Tuple
 import logging
 import asyncio
+from tenacity import (
+    AsyncRetrying,
+    stop_after_attempt,
+    wait_exponential,
+    retry_if_exception_type,
+    before_sleep_log,
+    RetryError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -97,31 +110,74 @@ class FirestoreService:
         field: str,
         values: List[str],
         order_by: Optional[str] = None,
+        max_retries: int = 3,
     ) -> List[Dict[str, Any]]:
-        try:
-            if not values:
-                return []
+        """
+        Query documents con operador 'in', dividiendo en chunks y ejecutando en paralelo.
+        Incluye retry automático con exponential backoff usando tenacity (async).
 
-            all_results = []
+        Args:
+            collection: Nombre de la colección
+            field: Campo a filtrar
+            values: Lista de valores para el filtro 'in'
+            order_by: Campo por el cual ordenar (opcional)
+            max_retries: Número máximo de reintentos (default: 3)
+        """
+        if not values:
+            return []
 
-            for i in range(0, len(values), 10):
-                chunk = values[i : i + 10]
+        chunks = [values[i : i + 10] for i in range(0, len(values), 10)]
+
+        async def fetch_chunk_with_retry(chunk, chunk_index: int):
+            """Fetch un chunk con retry automático usando AsyncRetrying"""
+
+            retryer = AsyncRetrying(
+                stop=stop_after_attempt(max_retries),
+                wait=wait_exponential(multiplier=0.1, min=0.1, max=10),
+                retry=retry_if_exception_type(
+                    (
+                        ResourceExhausted,
+                        DeadlineExceeded,
+                        GoogleAPIError,
+                    )
+                ),
+                before_sleep=before_sleep_log(logger, logging.WARNING),
+                reraise=True,
+            )
+
+            async def _fetch():
+                """Función interna que hace el fetch real"""
                 query = self.client.collection(collection).where(field, "in", chunk)
-
                 if order_by:
                     query = query.order_by(order_by)
 
                 docs = query.stream()
-                all_results.extend([doc.to_dict() async for doc in docs])
+                results = [doc.to_dict() async for doc in docs]
 
-            return all_results
+                return results
 
-        except GoogleAPIError as e:
-            logger.error(f"[Firestore] API error in query_documents_in: {e}")
-            raise
+            try:
+                async for attempt in retryer:
+                    with attempt:
+                        return await _fetch()
+            except RetryError as e:
+                logger.error(
+                    f"[Firestore] Chunk {chunk_index} failed after {max_retries} attempts: {e.last_attempt.exception()}"
+                )
+                raise e.last_attempt.exception()
+
+        try:
+            results = await asyncio.gather(
+                *(fetch_chunk_with_retry(chunk, i) for i, chunk in enumerate(chunks))
+            )
         except Exception as e:
-            logger.error(f"[Firestore] query_documents_in error: {e}")
+            logger.error(
+                f"[Firestore] query_documents_in failed: {type(e).__name__}: {e}"
+            )
             raise
+
+        all_results = [doc for chunk_results in results for doc in chunk_results]
+        return all_results
 
     async def close(self):
         """Limpia referencias del cliente."""

@@ -17,6 +17,7 @@ MANIFEST
 venv/
 ENV/
 env/
+/credentials/
 
 .vscode/*
 !.vscode/extensions.json
