@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 from typing import List, Optional, Any
 
 
@@ -6,19 +6,6 @@ class ErrorResponse(BaseModel):
     error: str
     detail: Optional[str] = None
     status_code: int
-
-
-class Serie(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    serie_uuid: str
-    serie_title: str
-    serie_initials: str = ""
-    serie_type: str = "undefined"
-    serie_stage: str = "undefined"
-    serie_episodes: List[str] = Field(default_factory=list)
-    serie_timestamp: int = 0
-    shootplan_uuid: Optional[str] = None
 
 
 class Scene(BaseModel):
@@ -60,11 +47,6 @@ class Shootplan(BaseModel):
     serie_uuid: str
     title: str
     order: int = 0
-
-
-class SeriesListResponse(BaseModel):
-    series: List[Serie]
-    total: int
 
 
 class ScenesListResponse(BaseModel):
