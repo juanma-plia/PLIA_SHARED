@@ -19,6 +19,14 @@ from .core.security import ACLService, get_acl_service_dep
 
 from .database.firestore import FirestoreService, get_firestore_service
 
+from .utils.pagination import (
+    PaginationParams,
+    PaginatedResponse,
+    paginate_list,
+    calculate_total_pages,
+)
+from .middleware import setup_compression_middleware
+
 from .models.requests import (
     ProfileRequest,
     SeriesRequest,
@@ -63,6 +71,13 @@ __all__ = [
     # Database
     "FirestoreService",
     "get_firestore_service",
+    # Utils
+    "PaginationParams",
+    "PaginatedResponse",
+    "paginate_list",
+    "calculate_total_pages",
+    # Middleware
+    "setup_compression_middleware",
     # Request models
     "ProfileRequest",
     "SeriesRequest",

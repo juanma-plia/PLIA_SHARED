@@ -58,7 +58,8 @@ class ScenesRequest(ProfileUUIDMixin, SerieUUIDMixin):
 class LocationsRequest(ProfileUUIDMixin, SerieUUIDMixin):
     """Request para obtener locaciones de una serie"""
 
-    pass
+    page: int = Field(default=1, ge=1, description="Número de página")
+    page_size: int = Field(default=25, ge=1, le=100, description="Tamaño de página")
 
 
 class DocsRequest(ProfileUUIDMixin, SerieUUIDMixin):
