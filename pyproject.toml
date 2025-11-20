@@ -6,8 +6,9 @@ authors = [{ name = "Juan María Ariza" }]
 dependencies = [
     "pydantic",
     "pydantic-settings",
-    "google-cloud-firestore"
-    ,"fastapi"
+    "google-cloud-firestore",
+    "fastapi",
+    "tenacity"
 ]
 
 [build-system]
