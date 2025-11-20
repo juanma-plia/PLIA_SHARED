@@ -86,7 +86,7 @@ class FirestoreService:
 
             if filters:
                 for field, op, value in filters:
-                    query = query.where(filter=(field, op, value))
+                    query = query.where(field, op, value)
 
             if order_by:
                 query = query.order_by(order_by)
@@ -147,7 +147,7 @@ class FirestoreService:
 
             async def _fetch():
                 """Función interna que hace el fetch real"""
-                query = self.client.collection(collection).where(filter=(field, "in", chunk))
+                query = self.client.collection(collection).where(field, "in", chunk)
                 if order_by:
                     query = query.order_by(order_by)
 
