@@ -1,42 +1,16 @@
-from google.cloud import firestore
-from google.cloud.firestore import AsyncClient
-from google.api_core.exceptions import (
-    GoogleAPIError,
-    NotFound,
-    ResourceExhausted,
-    DeadlineExceeded,
-)
-from typing import Any, Optional, List, Dict, Tuple
-import logging
-import asyncio
-from tenacity import (
-    AsyncRetrying,
-    stop_after_attempt,
-    wait_exponential,
-    retry_if_exception_type,
-    before_sleep_log,
-    RetryError,
-)
-
-logger = logging.getLogger(__name__)
-
-
 class FirestoreService:
     """Cliente Firestore async seguro y correctamente inicializado."""
 
-    def __init__(self, project_id: str):
-        self.project_id = project_id
+    def __init__(self):
         self._client: Optional[AsyncClient] = None
         self._is_initialized = False
 
     async def init(self):
-        """Inicializa el cliente async correctamente."""
+        """Inicializa el cliente async correctamente usando ADC."""
         if not self._is_initialized:
-            self._client = firestore.AsyncClient(project=self.project_id)
+            self._client = firestore.AsyncClient()
             self._is_initialized = True
-            logger.info(
-                f"[Firestore] Client initialized for project: {self.project_id}"
-            )
+            logger.info(f"[Firestore] Client initialized with ADC")
 
     @property
     def client(self) -> AsyncClient:
@@ -45,9 +19,7 @@ class FirestoreService:
         Si no está inicializado → ERROR explícito y claro.
         """
         if self._client is None:
-            raise RuntimeError(
-                "Firestore client not initialized. Call await firestore.init() on startup."
-            )
+            raise RuntimeError("Firestore client not initialized. Call init() first.")
         return self._client
 
     async def get_document(
@@ -191,10 +163,10 @@ _firestore_service: Optional[FirestoreService] = None
 _lock = asyncio.Lock()
 
 
-async def get_firestore_service(project_id="plia-ai"):
+async def get_firestore_service():
     async with _lock:
         global _firestore_service
         if _firestore_service is None:
-            _firestore_service = FirestoreService(project_id)
+            _firestore_service = FirestoreService()
             await _firestore_service.init()
     return _firestore_service
