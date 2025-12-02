@@ -1,5 +1,6 @@
 from google.cloud import firestore
 from google.cloud.firestore import AsyncClient
+from google.cloud.firestore_v1.base_query import FieldFilter
 from google.api_core.exceptions import (
     GoogleAPIError,
     NotFound,
@@ -86,7 +87,7 @@ class FirestoreService:
 
             if filters:
                 for field, op, value in filters:
-                    query = query.where(field, op, value)
+                    query = query.where(filter=FieldFilter(field, op, value))
 
             if order_by:
                 query = query.order_by(order_by)
@@ -147,7 +148,7 @@ class FirestoreService:
 
             async def _fetch():
                 """Función interna que hace el fetch real"""
-                query = self.client.collection(collection).where(field, "in", chunk)
+                query = self.client.collection(collection).where(filter=FieldFilter(field, "in", chunk))
                 if order_by:
                     query = query.order_by(order_by)
 
