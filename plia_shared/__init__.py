@@ -19,6 +19,14 @@ from .core.security import ACLService, get_acl_service_dep
 
 from .database.firestore import FirestoreService, get_firestore_service
 
+from .cache.redis import (
+    get_redis_client,
+    cache_get,
+    cache_set,
+    cache_delete,
+    RedisCacheService,
+)
+
 from .models.requests import (
     ProfileRequest,
     SeriesRequest,
@@ -63,6 +71,12 @@ __all__ = [
     # Database
     "FirestoreService",
     "get_firestore_service",
+    # Cache
+    "get_redis_client",
+    "cache_get",
+    "cache_set",
+    "cache_delete",
+    "RedisCacheService",
     # Request models
     "ProfileRequest",
     "SeriesRequest",

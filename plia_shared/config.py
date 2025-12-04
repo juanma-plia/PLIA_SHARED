@@ -13,6 +13,13 @@ class BaseAPISettings(BaseSettings):
 
     CORS_ORIGINS: List[str] = ["*"]
 
+    # Redis Configuration
+    REDIS_HOST: Optional[str] = None
+    REDIS_PORT: int = 6379
+    REDIS_PASSWORD: Optional[str] = None
+    REDIS_DB: int = 0
+    REDIS_USE_TLS: bool = False
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
