@@ -180,6 +180,55 @@ class FirestoreService:
         all_results = [doc for chunk_results in results for doc in chunk_results]
         return all_results
 
+    async def create_document(
+        self, collection: str, doc_id: str, data: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Crea un nuevo documento en la colección."""
+        try:
+            doc_ref = self.client.collection(collection).document(doc_id)
+            await doc_ref.set(data)
+            logger.info(f"[Firestore] Document created: {collection}/{doc_id}")
+            return data
+        except GoogleAPIError as e:
+            logger.error(f"[Firestore] API error in create_document: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"[Firestore] create_document error: {e}")
+            raise
+
+    async def update_document(
+        self, collection: str, doc_id: str, data: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Actualiza un documento existente."""
+        try:
+            doc_ref = self.client.collection(collection).document(doc_id)
+            await doc_ref.update(data)
+            logger.info(f"[Firestore] Document updated: {collection}/{doc_id}")
+            return data
+        except NotFound:
+            logger.warning(f"[Firestore] Document not found for update: {collection}/{doc_id}")
+            raise
+        except GoogleAPIError as e:
+            logger.error(f"[Firestore] API error in update_document: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"[Firestore] update_document error: {e}")
+            raise
+
+    async def delete_document(self, collection: str, doc_id: str) -> bool:
+        """Elimina un documento de la colección."""
+        try:
+            doc_ref = self.client.collection(collection).document(doc_id)
+            await doc_ref.delete()
+            logger.info(f"[Firestore] Document deleted: {collection}/{doc_id}")
+            return True
+        except GoogleAPIError as e:
+            logger.error(f"[Firestore] API error in delete_document: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"[Firestore] delete_document error: {e}")
+            raise
+
     async def close(self):
         """Limpia referencias del cliente."""
         if self._is_initialized:
