@@ -46,7 +46,43 @@ class ACLService:
         if not profile:
             raise ProfileNotFoundException(profile_uuid)
 
-        org_uuid = profile.get("org_uuid")
+        def _first_non_empty_to_str(value: Any) -> str | None:
+            """
+            Normaliza org_uuid/orgs que puede venir como string, lista o None.
+            - string: se usa tal cual (stripped) si no está vacío
+            - lista/tupla/set: toma el primer elemento no vacío y lo convierte a string
+            - None / lista vacía: devuelve None
+            """
+            if value is None:
+                return None
+
+            if isinstance(value, str):
+                s = value.strip()
+                return s if s else None
+
+            if isinstance(value, (list, tuple, set)):
+                for item in value:
+                    if item is None:
+                        continue
+                    if isinstance(item, str):
+                        s = item.strip()
+                        if s:
+                            return s
+                    else:
+                        if item:
+                            s = str(item).strip()
+                            if s:
+                                return s
+                return None
+
+            if value:
+                s = str(value).strip()
+                return s if s else None
+            return None
+
+        org_uuid = _first_non_empty_to_str(profile.get("org_uuid"))
+        if not org_uuid:
+            org_uuid = _first_non_empty_to_str(profile.get("orgs"))
         org_series_acl = []
 
         if org_uuid:
