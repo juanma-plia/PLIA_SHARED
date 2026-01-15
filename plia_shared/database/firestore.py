@@ -148,7 +148,9 @@ class FirestoreService:
 
             async def _fetch():
                 """Función interna que hace el fetch real"""
-                query = self.client.collection(collection).where(filter=FieldFilter(field, "in", chunk))
+                query = self.client.collection(collection).where(
+                    filter=FieldFilter(field, "in", chunk)
+                )
                 if order_by:
                     query = query.order_by(order_by)
 
@@ -206,7 +208,9 @@ class FirestoreService:
             logger.info(f"[Firestore] Document updated: {collection}/{doc_id}")
             return data
         except NotFound:
-            logger.warning(f"[Firestore] Document not found for update: {collection}/{doc_id}")
+            logger.warning(
+                f"[Firestore] Document not found for update: {collection}/{doc_id}"
+            )
             raise
         except GoogleAPIError as e:
             logger.error(f"[Firestore] API error in update_document: {e}")
