@@ -1,0 +1,19 @@
+[project]
+name = "plia_shared"
+version = "0.1.0"
+description = "Shared core logic for PLIA microservices"
+authors = [{ name = "Juan María Ariza" }]
+dependencies = [
+    "pydantic",
+    "pydantic-settings",
+    "google-cloud-firestore",
+    "fastapi",
+    "tenacity"
+]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["plia_shared*"]
